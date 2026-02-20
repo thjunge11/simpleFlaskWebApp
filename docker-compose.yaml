@@ -14,7 +14,6 @@ services:
 
   metabase:
     image: metabase/metabase:latest
-    platform: linux/amd64/v8
     container_name: metabase
     hostname: metabase
     volumes:

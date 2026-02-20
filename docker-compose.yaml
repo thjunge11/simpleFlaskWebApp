@@ -14,12 +14,14 @@ services:
 
   metabase:
     image: metabase/metabase:latest
-    container_name: metabase
-    hostname: metabase
+    platform: linux/amd64    
     volumes:
       - /dev/urandom:/dev/random:ro
     ports:
       - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       MB_DB_TYPE: postgres
       MB_DB_DBNAME: metabaseappdb

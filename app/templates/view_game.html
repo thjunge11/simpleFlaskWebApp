@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ game.name }}{% endblock %}
+
+{% block content %}
+<h1>🎮 {{ game.name }}</h1>
+
+<div class="card">
+    <table class="detail-table">
+        <tr><td>Game ID</td><td>{{ game.game_id }}</td></tr>
+        <tr><td>Name</td><td><strong>{{ game.name }}</strong></td></tr>
+        <tr><td>Release Year</td><td>{{ game.release_year or '-' }}</td></tr>
+        <tr><td>Platform</td><td><span class="badge badge-info">{{ game.platform.platform_name }}</span></td></tr>
+        <tr><td>Perspective</td><td><span class="badge badge-warning">{{ game.perspective.perspective_name }}</span></td></tr>
+        <tr><td>Playtime</td><td>{{ game.playtime or '0' }} hours</td></tr>
+        <tr><td>Status</td><td>
+            {% if game.finished %}
+                <span class="badge badge-success">✓ Finished</span>
+            {% else %}
+                <span class="badge badge-warning">⏳ In Progress</span>
+            {% endif %}
+        </td></tr>
+        <tr><td>Finished At</td><td>{{ game.finished_at.strftime('%d.%m.%Y') if game.finished_at else 'Not finished yet' }}</td></tr>
+        <tr><td>Tags</td><td>
+            <div class="tag-list">
+                {% for tag in game.tags %}
+                    <span class="badge badge-info">{{ tag.tag_name }}</span>
+                {% else %}
+                    <em>No tags</em>
+                {% endfor %}
+            </div>
+        </td></tr>
+        <tr><td>Comments</td><td>{{ game.comments or '-' }}</td></tr>
+    </table>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{{ url_for('edit_game', id=game.game_id) }}" class="btn btn-success">Edit Game</a>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to List</a>
+    <form method="POST" action="{{ url_for('delete_game', id=game.game_id) }}" style="display:inline;">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this game?')">Delete Game</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ game.name }}{% endblock %}
+
+{% block content %}
+<h1>✏️ Edit Game</h1>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Game ID</label>
+        <input type="text" value="{{ game.game_id }}" disabled>
+    </div>
+    
+    <div class="form-group">
+        <label>Game Name *</label>
+        <input type="text" name="name" value="{{ game.name }}" required>
+    </div>
+    
+    <div class="form-group">
+        <label>Release Year</label>
+        <input type="number" name="release_year" min="1970" max="2030" value="{{ game.release_year or '' }}" placeholder="e.g., 2024">
+    </div>
+    
+    <div class="form-group">
+        <label>Platform *</label>
+        <select name="platform_id" required>
+            {% for platform in platforms %}
+                <option value="{{ platform.platform_id }}" {% if platform.platform_id == game.platform_id %}selected{% endif %}>
+                    {{ platform.platform_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label>Perspective *</label>
+        <select name="perspective_id" required>
+            {% for perspective in perspectives %}
+                <option value="{{ perspective.perspective_id }}" {% if perspective.perspective_id == game.perspective_id %}selected{% endif %}>
+                    {{ perspective.perspective_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label>Playtime (hours)</label>
+        <input type="number" step="0.1" name="playtime" value="{{ game.playtime or '' }}">
+    </div>
+    
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="finished" {% if game.finished %}checked{% endif %}>
+            Finished
+        </label>
+    </div>
+    
+    <div class="form-group">
+        <label>Finished At</label>
+        <input type="date" name="finished_at" value="{{ game.finished_at.strftime('%Y-%m-%d') if game.finished_at else '' }}">
+    </div>
+    
+    <div class="form-group">
+        <label>Tags</label>
+        <div class="checkbox-group">
+            {% for tag in tags %}
+                <label>
+                    <input type="checkbox" name="tags" value="{{ tag.tag_id }}" 
+                           {% if tag.tag_id in current_tag_ids %}checked{% endif %}>
+                    {{ tag.tag_name }}
+                </label>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label>Comments</label>
+        <textarea name="comments" rows="4" placeholder="Add your thoughts, notes, or reviews...">{{ game.comments or '' }}</textarea>
+    </div>
+    
+    <button type="submit" class="btn btn-success">Save Changes</button>
+    <a href="{{ url_for('view_game', id=game.game_id) }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

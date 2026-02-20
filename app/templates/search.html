@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Search Games{% endblock %}
+
+{% block content %}
+<h1>🔍 Search Games</h1>
+
+<div class="search-box">
+    <form method="GET" style="display: flex; gap: 10px; width: 100%;">
+        <input type="text" name="q" placeholder="Search by game name or comments..." value="{{ query }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+
+{% if query %}
+    {% if games %}
+        <p>Found {{ games|length }} results for "{{ query }}"</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Year</th>
+                    <th>Tags</th>
+                    <th>Platform</th>
+                    <th>Perspective</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for game in games %}
+                <tr>
+                    <td><strong>{{ game.name }}</strong></td>
+                    <td>{{ game.release_year or '-' }}</td>
+                    <td>
+                        <div class="tag-list">
+                            {% for tag in game.tags %}
+                                <span class="badge badge-info">{{ tag.tag_name }}</span>
+                            {% else %}
+                                <em style="color: #999;">-</em>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td><span class="badge badge-info">{{ game.platform.platform_name }}</span></td>
+                    <td><span class="badge badge-warning">{{ game.perspective.perspective_name }}</span></td>
+                    <td>
+                        {% if game.finished %}
+                            <span class="badge badge-success">✓ Finished</span>
+                        {% else %}
+                            <span class="badge badge-warning">⏳ In Progress</span>
+                        {% endif %}
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <a href="{{ url_for('view_game', id=game.game_id) }}" class="btn btn-sm btn-primary">View</a>
+                        <a href="{{ url_for('edit_game', id=game.game_id) }}" class="btn btn-sm btn-success">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">No results found for "{{ query }}"</div>
+    {% endif %}
+{% endif %}
+{% endblock %}

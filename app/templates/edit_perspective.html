@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Perspective{% endblock %}
+
+{% block content %}
+<h1>✏️ Edit Perspective</h1>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Perspective ID</label>
+        <input type="text" value="{{ perspective.perspective_id }}" disabled>
+    </div>
+    
+    <div class="form-group">
+        <label>Perspective Name *</label>
+        <input type="text" name="perspective_name" value="{{ perspective.perspective_name }}" required>
+    </div>
+    
+    <button type="submit" class="btn btn-success">Save Changes</button>
+    <a href="{{ url_for('perspectives') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

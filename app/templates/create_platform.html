@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Add Platform{% endblock %}
+
+{% block content %}
+<h1>➕ Add New Platform</h1>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Platform Name *</label>
+        <input type="text" name="platform_name" required placeholder="e.g., PlayStation 5, Nintendo Switch">
+    </div>
+    
+    <button type="submit" class="btn btn-success">Create Platform</button>
+    <a href="{{ url_for('platforms') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

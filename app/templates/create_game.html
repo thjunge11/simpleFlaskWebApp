@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Game{% endblock %}
+
+{% block content %}
+<h1>➕ Add New Game</h1>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Game Name *</label>
+        <input type="text" name="name" required>
+    </div>
+    
+    <div class="form-group">
+        <label>Release Year</label>
+        <input type="number" name="release_year" min="1970" max="2030" placeholder="e.g., 2024">
+    </div>
+    
+    <div class="form-group">
+        <label>Platform *</label>
+        <select name="platform_id" required>
+            <option value="">Select Platform</option>
+            {% for platform in platforms %}
+                <option value="{{ platform.platform_id }}">{{ platform.platform_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label>Perspective *</label>
+        <select name="perspective_id" required>
+            <option value="">Select Perspective</option>
+            {% for perspective in perspectives %}
+                <option value="{{ perspective.perspective_id }}">{{ perspective.perspective_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label>Playtime (hours)</label>
+        <input type="number" step="0.1" name="playtime" placeholder="0.0">
+    </div>
+    
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="finished">
+            Finished
+        </label>
+    </div>
+    
+    <div class="form-group">
+        <label>Finished At</label>
+        <input type="date" name="finished_at">
+    </div>
+    
+    <div class="form-group">
+        <label>Tags</label>
+        <div class="checkbox-group">
+            {% for tag in tags %}
+                <label>
+                    <input type="checkbox" name="tags" value="{{ tag.tag_id }}">
+                    {{ tag.tag_name }}
+                </label>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label>Comments</label>
+        <textarea name="comments" rows="4" placeholder="Add your thoughts, notes, or reviews..."></textarea>
+    </div>
+    
+    <button type="submit" class="btn btn-success">Create Game</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

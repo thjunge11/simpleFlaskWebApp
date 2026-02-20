@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Tags{% endblock %}
+
+{% block content %}
+<h1>🏷️ Category Tags</h1>
+
+<a href="{{ url_for('create_tag') }}" class="btn btn-primary" style="margin-bottom: 20px;">+ Add Tag</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tag Name</th>
+            <th>Games Count</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tag in tags %}
+        <tr>
+            <td>{{ tag.tag_id }}</td>
+            <td><span class="badge badge-info">{{ tag.tag_name }}</span></td>
+            <td>{{ tag.games|length }} games</td>
+            <td>
+                <a href="{{ url_for('edit_tag', id=tag.tag_id) }}" class="btn btn-sm btn-success">Edit</a>
+                <form method="POST" action="{{ url_for('delete_tag', id=tag.tag_id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this tag?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

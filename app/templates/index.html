@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}All Games{% endblock %}
+
+{% block content %}
+<h1>🎮 Game Library</h1>
+
+<div class="filters">
+    <form method="GET" id="filterForm">
+        <label style="margin-right: 10px;"><strong>Filters:</strong></label>
+        
+        <select name="finished" onchange="this.form.submit()">
+            <option value="">All Games</option>
+            <option value="yes" {% if finished_filter == 'yes' %}selected{% endif %}>Finished</option>
+            <option value="no" {% if finished_filter == 'no' %}selected{% endif %}>Not Finished</option>
+        </select>
+        
+        <select name="platform" onchange="this.form.submit()">
+            <option value="">All Platforms</option>
+            {% for platform in platforms %}
+                <option value="{{ platform.platform_id }}" {% if platform_filter == platform.platform_id|string %}selected{% endif %}>
+                    {{ platform.platform_name }}
+                </option>
+            {% endfor %}
+        </select>
+        
+        <select name="perspective" onchange="this.form.submit()">
+            <option value="">All Perspectives</option>
+            {% for perspective in perspectives %}
+                <option value="{{ perspective.perspective_id }}" {% if perspective_filter == perspective.perspective_id|string %}selected{% endif %}>
+                    {{ perspective.perspective_name }}
+                </option>
+            {% endfor %}
+        </select>
+        
+        <select name="tag" onchange="this.form.submit()">
+            <option value="">All Tags</option>
+            {% for tag in tags %}
+                <option value="{{ tag.tag_id }}" {% if tag_filter == tag.tag_id|string %}selected{% endif %}>
+                    {{ tag.tag_name }}
+                </option>
+            {% endfor %}
+        </select>
+        
+        <label style="margin-left: 20px;"><strong>Sort:</strong></label>
+        
+        <select name="sort" onchange="this.form.submit()">
+            <option value="game_id" {% if sort_by == 'game_id' %}selected{% endif %}>ID</option>
+            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+            <option value="release_year" {% if sort_by == 'release_year' %}selected{% endif %}>Release Year</option>
+            <option value="platform" {% if sort_by == 'platform' %}selected{% endif %}>Platform</option>
+            <option value="perspective" {% if sort_by == 'perspective' %}selected{% endif %}>Perspective</option>
+            <option value="playtime" {% if sort_by == 'playtime' %}selected{% endif %}>Playtime</option>
+            <option value="finished" {% if sort_by == 'finished' %}selected{% endif %}>Status</option>
+            <option value="finished_at" {% if sort_by == 'finished_at' %}selected{% endif %}>Finished Date</option>
+        </select>
+        
+        <select name="order" onchange="this.form.submit()">
+            <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending ↑</option>
+            <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending ↓</option>
+        </select>
+        
+        {% if finished_filter or platform_filter or perspective_filter or tag_filter %}
+            <a href="{{ url_for('index') }}" class="btn btn-sm btn-secondary">Clear Filters</a>
+        {% endif %}
+    </form>
+</div>
+
+<p>Showing {{ games.items|length }} of {{ games.total }} games</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>
+                <a href="{{ url_for('index', sort='game_id', order='asc' if sort_by == 'game_id' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    ID {% if sort_by == 'game_id' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="{{ url_for('index', sort='name', order='asc' if sort_by == 'name' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Name {% if sort_by == 'name' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="{{ url_for('index', sort='release_year', order='asc' if sort_by == 'release_year' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Year {% if sort_by == 'release_year' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>Tags</th>
+            <th>
+                <a href="{{ url_for('index', sort='platform', order='asc' if sort_by == 'platform' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Platform {% if sort_by == 'platform' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="{{ url_for('index', sort='perspective', order='asc' if sort_by == 'perspective' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Perspective {% if sort_by == 'perspective' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="{{ url_for('index', sort='playtime', order='asc' if sort_by == 'playtime' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Playtime (h) {% if sort_by == 'playtime' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="{{ url_for('index', sort='finished', order='asc' if sort_by == 'finished' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Status {% if sort_by == 'finished' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="{{ url_for('index', sort='finished_at', order='asc' if sort_by == 'finished_at' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Finished At {% if sort_by == 'finished_at' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for game in games.items %}
+        <tr>
+            <td>{{ game.game_id }}</td>
+            <td><strong>{{ game.name }}</strong></td>
+            <td>{{ game.release_year or '-' }}</td>
+            <td>
+                <div class="tag-list">
+                    {% for tag in game.tags %}
+                        <span class="badge badge-info">{{ tag.tag_name }}</span>
+                    {% else %}
+                        <em style="color: #999;">-</em>
+                    {% endfor %}
+                </div>
+            </td>
+            <td><span class="badge badge-info">{{ game.platform.platform_name }}</span></td>
+            <td><span class="badge badge-warning">{{ game.perspective.perspective_name }}</span></td>
+            <td>{{ game.playtime or '-' }}</td>
+            <td>
+                {% if game.finished %}
+                    <span class="badge badge-success">✓ Finished</span>
+                {% else %}
+                    <span class="badge badge-warning">⏳ In Progress</span>
+                {% endif %}
+            </td>
+            <td>{{ game.finished_at.strftime('%d.%m.%Y') if game.finished_at else '-' }}</td>
+            <td style="white-space: nowrap;">
+                <a href="{{ url_for('view_game', id=game.game_id) }}" class="btn btn-sm btn-primary">View</a>
+                <a href="{{ url_for('edit_game', id=game.game_id) }}" class="btn btn-sm btn-success">Edit</a>
+                <form method="POST" action="{{ url_for('delete_game', id=game.game_id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this game?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    {% if games.has_prev %}
+        <a href="{{ url_for('index', page=games.prev_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, sort=sort_by, order=sort_order) }}">← Previous</a>
+    {% endif %}
+    
+    {% for page_num in games.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
+            <a href="{{ url_for('index', page=page_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, sort=sort_by, order=sort_order) }}" 
+               class="{% if page_num == games.page %}active{% endif %}">{{ page_num }}</a>
+        {% else %}
+            <span>...</span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if games.has_next %}
+        <a href="{{ url_for('index', page=games.next_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, sort=sort_by, order=sort_order) }}">Next →</a>
+    {% endif %}
+</div>
+{% endblock %}

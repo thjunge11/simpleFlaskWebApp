@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Perspectives{% endblock %}
+
+{% block content %}
+<h1>👁️ Perspectives</h1>
+
+<a href="{{ url_for('create_perspective') }}" class="btn btn-primary" style="margin-bottom: 20px;">+ Add Perspective</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Perspective Name</th>
+            <th>Games Count</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for perspective in perspectives %}
+        <tr>
+            <td>{{ perspective.perspective_id }}</td>
+            <td><strong>{{ perspective.perspective_name }}</strong></td>
+            <td>{{ perspective.games|length }} games</td>
+            <td>
+                <a href="{{ url_for('edit_perspective', id=perspective.perspective_id) }}" class="btn btn-sm btn-success">Edit</a>
+                <form method="POST" action="{{ url_for('delete_perspective', id=perspective.perspective_id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this perspective?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

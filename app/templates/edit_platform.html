@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Platform{% endblock %}
+
+{% block content %}
+<h1>✏️ Edit Platform</h1>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Platform ID</label>
+        <input type="text" value="{{ platform.platform_id }}" disabled>
+    </div>
+    
+    <div class="form-group">
+        <label>Platform Name *</label>
+        <input type="text" name="platform_name" value="{{ platform.platform_name }}" required>
+    </div>
+    
+    <button type="submit" class="btn btn-success">Save Changes</button>
+    <a href="{{ url_for('platforms') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

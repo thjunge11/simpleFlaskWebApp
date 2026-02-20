@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Add Perspective{% endblock %}
+
+{% block content %}
+<h1>➕ Add New Perspective</h1>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Perspective Name *</label>
+        <input type="text" name="perspective_name" required placeholder="e.g., First Person, Third Person, Isometric">
+    </div>
+    
+    <button type="submit" class="btn btn-success">Create Perspective</button>
+    <a href="{{ url_for('perspectives') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

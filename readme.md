@@ -12,6 +12,7 @@ A Flask web application for managing and browsing a gaming database, containeriz
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
+- [Database preparation](#database-preparation)
 - [Running the App](#running-the-app)
 - [Accessing the App](#accessing-the-app)
 - [Database](#database)
@@ -134,6 +135,15 @@ DB_PASS=changeme
 ```
 
 > ⚠️ **Never commit your `.env` file to version control.** It is already included in `.gitignore`.
+
+---
+
+## ⚙️ Database preparation
+The postgres database structure can be setup with the SQL code in `db_struct_2026-02-24_145629.sql`
+
+### Database structure:
+
+![Entity-Relationship Diagram](utils/assets/erd_diagram.png)
 
 ---
 

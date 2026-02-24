@@ -1,0 +1,44 @@
+@startuml ERD
+
+entity "games" as games {
+  *game_id : bigint <<generated>>
+  --
+  name : text <<not null>>
+  perspective_id : integer <<FK>>
+  platform_id : integer <<FK>>
+  finished : boolean <<default false>>
+  playtime : numeric
+  release_year : smallint
+  comments : text
+  finished_at : date
+}
+
+entity "perspectives" as perspectives {
+  *perspective_id : integer <<generated>>
+  --
+  perspective_name : varchar(50) <<unique>>
+}
+
+entity "platforms" as platforms {
+  *platform_id : integer <<generated>>
+  --
+  platform_name : varchar(50) <<unique>>
+}
+
+entity "category_tags" as category_tags {
+  *tag_id : integer <<generated>>
+  --
+  tag_name : varchar(50) <<unique>>
+}
+
+entity "game_category_tags" as game_category_tags {
+  *tag_id : integer <<FK>>
+  *game_id : integer <<FK>>
+}
+
+games }o--|| perspectives : "perspective_id"
+games }o--|| platforms : "platform_id"
+games ||--o{ game_category_tags : "game_id"
+category_tags ||--o{ game_category_tags : "tag_id"
+
+@enduml</content>

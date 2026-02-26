@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict cLyakoj82uoAA3CxNNlWWUct8aDWejkPcbSgckcDGJHxis8x7UUVlIniFKYry6r
+\restrict WUFcUYEj0JvXF4WqMQQwxXj3XOUwMNkX3AmedNjDEfJZZnyypXsdyamJY7FH1kI
 
 -- Dumped from database version 16.12 (Debian 16.12-1.pgdg13+1)
 -- Dumped by pg_dump version 18.1
@@ -90,7 +90,8 @@ CREATE TABLE public.games (
     playtime numeric,
     release_year smallint,
     comments text,
-    finished_at date
+    finished_at date,
+    played_year smallint DEFAULT EXTRACT(year FROM CURRENT_DATE)
 );
 
 
@@ -108,6 +109,22 @@ ALTER TABLE public.games ALTER COLUMN game_id ADD GENERATED ALWAYS AS IDENTITY (
     NO MAXVALUE
     CACHE 1
 );
+
+
+--
+-- Name: land_game_release_dates; Type: TABLE; Schema: public; Owner: flaskapp
+--
+
+CREATE TABLE public.land_game_release_dates (
+    game_id integer NOT NULL,
+    name character varying(255),
+    release_date date,
+    error boolean,
+    log text
+);
+
+
+ALTER TABLE public.land_game_release_dates OWNER TO flaskapp;
 
 --
 -- Name: perspectives; Type: TABLE; Schema: public; Owner: flaskapp
@@ -192,6 +209,15 @@ ALTER TABLE ONLY public.game_category_tags
 ALTER TABLE ONLY public.games
     ADD CONSTRAINT history_pkey PRIMARY KEY (game_id);
 
+
+--
+-- Name: land_game_release_dates land_game_release_dates_pkey; Type: CONSTRAINT; Schema: public; Owner: flaskapp
+--
+
+ALTER TABLE ONLY public.land_game_release_dates
+    ADD CONSTRAINT land_game_release_dates_pkey PRIMARY KEY (game_id);
+
+
 --
 -- Name: perspectives perspectives_pkey; Type: CONSTRAINT; Schema: public; Owner: flaskapp
 --
@@ -267,5 +293,5 @@ ALTER TABLE ONLY public.games
 -- PostgreSQL database dump complete
 --
 
-\unrestrict cLyakoj82uoAA3CxNNlWWUct8aDWejkPcbSgckcDGJHxis8x7UUVlIniFKYry6r
+\unrestrict WUFcUYEj0JvXF4WqMQQwxXj3XOUwMNkX3AmedNjDEfJZZnyypXsdyamJY7FH1kI
 

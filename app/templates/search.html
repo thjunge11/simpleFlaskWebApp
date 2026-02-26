@@ -19,7 +19,8 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Year</th>
+                    <th>Release Year</th>
+                    <th>Played Year</th>
                     <th>Tags</th>
                     <th>Platform</th>
                     <th>Perspective</th>
@@ -32,6 +33,7 @@
                 <tr>
                     <td><strong>{{ game.name }}</strong></td>
                     <td>{{ game.release_year or '-' }}</td>
+                    <td>{{ game.played_year or '-' }}</td>
                     <td>
                         <div class="tag-list">
                             {% for tag in game.tags %}

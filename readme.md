@@ -299,6 +299,7 @@ docker compose up --build
   ```
 - Never expose the database port (`5435`) publicly in production
 - Use HTTPS in production with a reverse proxy (e.g. nginx)
+- Note: ssl_context='adhoc' generates a new cert on every restart, which is fine for local/dev use. For production, you'd want a real cert (e.g., Let's Encrypt via nginx) or mount a persistent cert file into the container.
 
 ---
 
@@ -342,3 +343,4 @@ docker compose up --build
 
 
 This project is licensed under the MIT License.
+

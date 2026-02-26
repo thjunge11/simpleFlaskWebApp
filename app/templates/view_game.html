@@ -10,6 +10,7 @@
         <tr><td>Game ID</td><td>{{ game.game_id }}</td></tr>
         <tr><td>Name</td><td><strong>{{ game.name }}</strong></td></tr>
         <tr><td>Release Year</td><td>{{ game.release_year or '-' }}</td></tr>
+        <tr><td>Played Year</td><td>{{ game.played_year or '-' }}</td></tr>
         <tr><td>Platform</td><td><span class="badge badge-info">{{ game.platform.platform_name }}</span></td></tr>
         <tr><td>Perspective</td><td><span class="badge badge-warning">{{ game.perspective.perspective_name }}</span></td></tr>
         <tr><td>Playtime</td><td>{{ game.playtime or '0' }} hours</td></tr>

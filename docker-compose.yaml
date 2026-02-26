@@ -6,6 +6,22 @@ services:
       - "443:443"
     depends_on:
       - web
+    volumes:
+      - letsencrypt_data:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - letsencrypt_data:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    # Run once to obtain cert; remove --dry-run when ready
+    command: certonly --webroot --webroot-path=/var/www/certbot
+             --email YOUR_EMAIL
+             --agree-tos --no-eff-email
+             --dry-run
+             -d YOUR_DOMAIN
 
   web:
     build: app
@@ -38,3 +54,5 @@ services:
 
 volumes:
   postgres_data_volume:
+  letsencrypt_data:
+  certbot_webroot:

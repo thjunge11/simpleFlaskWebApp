@@ -1,8 +1,16 @@
 services:
+  nginx:
+    build: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+
   web:
     build: app
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     depends_on:
       db:
         condition: service_healthy

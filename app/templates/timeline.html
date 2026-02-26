@@ -31,6 +31,9 @@
                 {% if game.release_year %}
                 <div class="timeline-card-release">Released: {{ game.release_year }}</div>
                 {% endif %}
+                {% if game.comments %}
+                <div class="timeline-card-comments">{{ game.comments }}</div>
+                {% endif %}
                 {% if game.tags %}
                 <div class="tag-list" style="margin-top:6px;">
                     {% for tag in game.tags %}
@@ -65,5 +68,6 @@
     .timeline-card-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
     .timeline-card-playtime { font-size: 0.82em; color: #888; margin-top: 4px; }
     .timeline-card-release { font-size: 0.8em; color: #aaa; margin-top: 2px; }
+    .timeline-card-comments { font-size: 0.82em; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #ebebf5; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 </style>
 {% endblock %}

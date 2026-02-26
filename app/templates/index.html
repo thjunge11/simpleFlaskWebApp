@@ -48,6 +48,7 @@
             <option value="game_id" {% if sort_by == 'game_id' %}selected{% endif %}>ID</option>
             <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
             <option value="release_year" {% if sort_by == 'release_year' %}selected{% endif %}>Release Year</option>
+            <option value="played_year" {% if sort_by == 'played_year' %}selected{% endif %}>Played Year</option>
             <option value="platform" {% if sort_by == 'platform' %}selected{% endif %}>Platform</option>
             <option value="perspective" {% if sort_by == 'perspective' %}selected{% endif %}>Perspective</option>
             <option value="playtime" {% if sort_by == 'playtime' %}selected{% endif %}>Playtime</option>
@@ -86,6 +87,11 @@
                     Year {% if sort_by == 'release_year' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
+            <th>
+                <a href="{{ url_for('index', sort='played_year', order='asc' if sort_by == 'played_year' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                    Played Year {% if sort_by == 'played_year' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
             <th>Tags</th>
             <th>
                 <a href="{{ url_for('index', sort='platform', order='asc' if sort_by == 'platform' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
@@ -121,6 +127,7 @@
             <td>{{ game.game_id }}</td>
             <td><strong>{{ game.name }}</strong></td>
             <td>{{ game.release_year or '-' }}</td>
+            <td>{{ game.played_year or '-' }}</td>
             <td>
                 <div class="tag-list">
                     {% for tag in game.tags %}

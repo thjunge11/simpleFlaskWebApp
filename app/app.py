@@ -70,7 +70,7 @@ class GameCategoryTag(db.Model):
 @app.route('/')
 def index():
     page = request.args.get('page', 1, type=int)
-    per_page = 20
+    per_page = 50
     
     # Filters
     finished_filter = request.args.get('finished', '')

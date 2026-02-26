@@ -3,7 +3,7 @@
 {% block title %}All Games{% endblock %}
 
 {% block content %}
-<h1>🎮 Game Library</h1>
+<h1>🎮 Games played</h1>
 
 <div class="filters">
     <form method="GET" id="filterForm">
@@ -84,7 +84,7 @@
             </th>
             <th>
                 <a href="{{ url_for('index', sort='release_year', order='asc' if sort_by == 'release_year' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
-                    Year {% if sort_by == 'release_year' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                    Release Year {% if sort_by == 'release_year' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>

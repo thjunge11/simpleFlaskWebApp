@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Comments{% endblock %}
+
+{% block content %}
+<h1>💬 Game Comments</h1>
+<p style="color:#777; margin-bottom:30px;">{{ total_games }} game{{ 's' if total_games != 1 else '' }} with comments, grouped by year played</p>
+
+{% if timeline %}
+<div class="timeline-container">
+    {% for year, games in timeline %}
+    <div class="timeline-year-block">
+        <div class="timeline-year-label">
+            {% if year %}{{ year }}{% else %}Unknown{% endif %}
+            <span class="year-count">{{ games|length }} game{{ 's' if games|length != 1 else '' }}</span>
+        </div>
+        <div class="comments-list">
+            {% for game in games %}
+            <div class="comment-entry">
+                <div class="comment-entry-header">
+                    <a href="{{ url_for('view_game', id=game.game_id) }}" class="comment-game-title">{{ game.name }}</a>
+                    <div class="comment-entry-badges">
+                        <span class="badge badge-info">{{ game.platform.platform_name }}</span>
+                        <span class="badge badge-warning">{{ game.perspective.perspective_name }}</span>
+                        {% if game.finished %}
+                            <span class="badge badge-success">✓ Finished</span>
+                        {% endif %}
+                        {% if game.playtime %}
+                            <span class="badge" style="background:#ede9f7;color:#764ba2;">🕐 {{ "%.1f"|format(game.playtime) }}h</span>
+                        {% endif %}
+                        {% if game.release_year %}
+                            <span class="badge" style="background:#f0f0f0;color:#888;">{{ game.release_year }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="comment-body">{{ game.comments }}</div>
+                {% if game.tags %}
+                <div class="tag-list" style="margin-top:8px; max-width:none;">
+                    {% for tag in game.tags %}
+                    <span class="badge" style="background:#e8e8f0;color:#555;">{{ tag.tag_name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align:center; color:#777; padding:60px;">
+        <p style="font-size:1.2em;">No games with comments found.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary" style="margin-top:20px;">Browse Games</a>
+    </div>
+{% endif %}
+</div>
+
+<style>
+    .timeline-container { position: relative; padding-left: 20px; }
+    .timeline-container::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #667eea 0%, #764ba2 100%); border-radius: 4px; }
+    .timeline-year-block { position: relative; margin-bottom: 40px; padding-left: 30px; }
+    .timeline-year-block::before { content: ''; position: absolute; left: -10px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); border: 3px solid white; box-shadow: 0 0 0 3px #667eea44; }
+    .timeline-year-label { font-size: 1.5em; font-weight: 700; color: #333; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; }
+    .year-count { font-size: 0.6em; background: #f0f0f8; color: #667eea; padding: 3px 10px; border-radius: 12px; font-weight: 500; }
+    .comments-list { display: flex; flex-direction: column; gap: 14px; }
+    .comment-entry { background: #fafafa; border: 1.5px solid #e8e8f0; border-radius: 8px; padding: 16px 20px; transition: border-color 0.2s, box-shadow 0.2s; }
+    .comment-entry:hover { border-color: #667eea; box-shadow: 0 4px 12px rgba(102,126,234,0.10); background: white; }
+    .comment-entry-header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .comment-game-title { font-weight: 700; font-size: 1.05em; color: #667eea; text-decoration: none; }
+    .comment-game-title:hover { color: #764ba2; text-decoration: underline; }
+    .comment-entry-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+    .comment-body { color: #444; font-size: 0.95em; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+</style>
+{% endblock %}

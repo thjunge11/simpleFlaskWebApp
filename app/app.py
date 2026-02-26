@@ -385,6 +385,32 @@ def delete_tag(id):
     return redirect(url_for('tags'))
 
 
+# Comments timeline
+@app.route('/comments')
+def comments():
+    games = Game.query.filter(
+        Game.comments.isnot(None),
+        Game.comments != ''
+    ).order_by(
+        Game.played_year.desc().nulls_last(),
+        Game.name.asc()
+    ).all()
+
+    grouped = {}
+    for game in games:
+        year = game.played_year
+        grouped.setdefault(year, []).append(game)
+
+    timeline_data = sorted(
+        grouped.items(),
+        key=lambda x: (x[0] is None, -(x[0] or 0))
+    )
+
+    return render_template('comments.html',
+                           timeline=timeline_data,
+                           total_games=len(games))
+
+
 # Timeline
 @app.route('/timeline')
 def timeline():

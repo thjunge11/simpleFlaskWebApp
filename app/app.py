@@ -385,6 +385,31 @@ def delete_tag(id):
     return redirect(url_for('tags'))
 
 
+# Timeline
+@app.route('/timeline')
+def timeline():
+    from itertools import groupby
+    games = Game.query.order_by(
+        Game.played_year.desc().nulls_last(),
+        Game.name.asc()
+    ).all()
+
+    grouped = {}
+    for game in games:
+        year = game.played_year
+        grouped.setdefault(year, []).append(game)
+
+    # Sort: years descending, None last
+    timeline_data = sorted(
+        grouped.items(),
+        key=lambda x: (x[0] is None, -(x[0] or 0))
+    )
+
+    return render_template('timeline.html',
+                           timeline=timeline_data,
+                           total_games=len(games))
+
+
 # Stats
 @app.route('/stats')
 def stats():

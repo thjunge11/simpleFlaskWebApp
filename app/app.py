@@ -29,6 +29,7 @@ class Game(db.Model):
     finished = db.Column(db.Boolean, default=False, nullable=False)
     playtime = db.Column(db.Numeric)
     release_year = db.Column(db.SmallInteger)
+    played_year = db.Column(db.SmallInteger)
     comments = db.Column(db.Text)
     
     # Relationships
@@ -108,6 +109,8 @@ def index():
         order_column = Game.finished_at
     elif sort_by == 'release_year':
         order_column = Game.release_year
+    elif sort_by == 'played_year':
+        order_column = Game.played_year
     elif sort_by == 'platform':
         query = query.join(Platform)
         order_column = Platform.platform_name
@@ -168,6 +171,7 @@ def create_game():
             finished=request.form.get('finished') == 'on',
             playtime=request.form.get('playtime') if request.form.get('playtime') else None,
             release_year=request.form.get('release_year') if request.form.get('release_year') else None,
+            played_year=request.form.get('played_year') if request.form.get('played_year') else None,
             comments=request.form.get('comments') if request.form.get('comments') else None
         )
         
@@ -212,6 +216,7 @@ def edit_game(id):
         game.finished = request.form.get('finished') == 'on'
         game.playtime = request.form.get('playtime') if request.form.get('playtime') else None
         game.release_year = request.form.get('release_year') if request.form.get('release_year') else None
+        game.played_year = request.form.get('played_year') if request.form.get('played_year') else None
         game.comments = request.form.get('comments') if request.form.get('comments') else None
                 
         GameCategoryTag.query.filter_by(game_id=game.game_id).delete()

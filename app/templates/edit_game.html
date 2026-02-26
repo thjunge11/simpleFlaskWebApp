@@ -22,6 +22,11 @@
     </div>
     
     <div class="form-group">
+        <label>Played Year</label>
+        <input type="number" name="played_year" min="1970" max="2030" value="{{ game.played_year or '' }}" placeholder="e.g., 2024">
+    </div>
+    
+    <div class="form-group">
         <label>Platform *</label>
         <select name="platform_id" required>
             {% for platform in platforms %}

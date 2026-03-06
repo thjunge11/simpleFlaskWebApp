@@ -2,7 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 import os
+import json
 from datetime import datetime
+import redis as redis_lib
+import anthropic
 
 # Read DB config from environment
 DB_USER = os.getenv("DB_USER")
@@ -10,10 +13,22 @@ DB_PASS = os.getenv("DB_PASS")
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 
+# Redis config
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+try:
+    redis_client = redis_lib.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+    redis_client.ping()
+except redis_lib.exceptions.ConnectionError as e:
+    print(f"Warning: Could not connect to Redis at startup: {e}")
+    redis_client = redis_lib.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'a4f8c2e6b9d1f5a7c3e8b2d6f1a9c4e7b5d2f8a6c1e9b3d7f2a5c8e4b1d6f9a3'
+
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-3-5-haiku-20241022")
 
 db = SQLAlchemy(app)
 
@@ -459,6 +474,131 @@ def stats():
                          total_playtime=total_playtime,
                          platform_stats=platform_stats,
                          perspective_stats=perspective_stats)
+
+
+# Claude AI helpers
+def fetch_game_info_from_claude(game_name, release_year=None):
+    """Fetch game description, Metacritic score, and thumbnail URL from Claude."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY environment variable is not set.")
+
+    client = anthropic.Anthropic(api_key=api_key)
+    year_info = f" (released in {release_year})" if release_year else ""
+    prompt = (
+        f'For the video game "{game_name}"{year_info}, return ONLY a JSON object '
+        f'with these fields:\n'
+        f'{{"description": "1-2 sentence description", '
+        f'"metacritic_score": <integer 0-100 or null>, '
+        f'"thumbnail_url": "direct URL to cover art image or null"}}\n'
+        f'No markdown, no extra text — JSON only.'
+    )
+
+    message = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=300,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    response_text = message.content[0].text.strip()
+    # Strip markdown code fences if present
+    if response_text.startswith("```"):
+        lines = response_text.splitlines()
+        response_text = "\n".join(lines[1:-1]).strip()
+
+    data = json.loads(response_text)
+
+    # Normalize metacritic_score to int or None
+    raw_score = data.get("metacritic_score")
+    if raw_score is None or raw_score == "" or raw_score == "null":
+        data["metacritic_score"] = None
+    else:
+        try:
+            data["metacritic_score"] = int(raw_score)
+        except (ValueError, TypeError):
+            data["metacritic_score"] = None
+
+    data["fetched_at"] = datetime.now().isoformat()
+    return data
+
+
+# AI Game Info routes
+@app.route('/game_info')
+def game_info():
+    games = Game.query.order_by(Game.name.asc()).all()
+    games_with_info = []
+    redis_available = True
+    for game in games:
+        info = None
+        try:
+            cached = redis_client.get(f"game_info:{game.game_id}")
+            if cached:
+                info = json.loads(cached)
+        except redis_lib.exceptions.ConnectionError:
+            redis_available = False
+            break
+        games_with_info.append((game, info))
+
+    if not redis_available:
+        flash("Redis is not available. Cannot load cached game info.", "danger")
+        games_with_info = [(g, None) for g in games]
+
+    total = len(games_with_info)
+    cached_count = sum(1 for _, info in games_with_info if info)
+    return render_template('game_info.html',
+                           games_with_info=games_with_info,
+                           total=total,
+                           cached_count=cached_count)
+
+
+@app.route('/game_info/fetch/<int:game_id>', methods=['POST'])
+def fetch_single_game_info(game_id):
+    game = Game.query.get_or_404(game_id)
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        flash("ANTHROPIC_API_KEY is not set. Please configure the environment variable.", "danger")
+        return redirect(url_for('game_info'))
+    try:
+        info = fetch_game_info_from_claude(game.name, game.release_year)
+        redis_client.set(f"game_info:{game.game_id}", json.dumps(info))
+        flash(f"Info for \"{game.name}\" fetched successfully!", "success")
+    except redis_lib.exceptions.ConnectionError:
+        flash("Redis is not available. Cannot store game info.", "danger")
+    except Exception as e:
+        flash(f"Error fetching info for \"{game.name}\": {e}", "danger")
+    return redirect(url_for('game_info'))
+
+
+@app.route('/game_info/fetch_new', methods=['POST'])
+def fetch_new_game_info():
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        flash("ANTHROPIC_API_KEY is not set. Please configure the environment variable.", "danger")
+        return redirect(url_for('game_info'))
+    games = Game.query.order_by(Game.game_id.asc()).all()
+    fetched_count = 0
+    error_count = 0
+    for game in games:
+        try:
+            cached = redis_client.get(f"game_info:{game.game_id}")
+        except redis_lib.exceptions.ConnectionError:
+            flash("Redis is not available. Cannot fetch game info.", "danger")
+            return redirect(url_for('game_info'))
+        if cached:
+            continue
+        try:
+            info = fetch_game_info_from_claude(game.name, game.release_year)
+            redis_client.set(f"game_info:{game.game_id}", json.dumps(info))
+            fetched_count += 1
+        except Exception as e:
+            print(f"Error fetching info for game {game.game_id} ({game.name}): {e}")
+            error_count += 1
+
+    if fetched_count > 0:
+        flash(f"Fetched info for {fetched_count} new game(s).", "success")
+    else:
+        flash("No new games without cached info found.", "info")
+    if error_count > 0:
+        flash(f"Failed to fetch info for {error_count} game(s).", "danger")
+    return redirect(url_for('game_info'))
 
 
 if __name__ == '__main__':

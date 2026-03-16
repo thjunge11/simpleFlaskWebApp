@@ -66,4 +66,102 @@
         </tbody>
     </table>
 </div>
+
+<div class="card">
+    <h2>Total Hours Played</h2>
+    <div class="hours-chart-grid">
+        <div class="chart-panel">
+            <h3>Per Year</h3>
+            <canvas id="hoursPerYearChart"></canvas>
+        </div>
+        <div class="chart-panel">
+            <h3>Per Platform</h3>
+            <canvas id="hoursPerPlatformChart"></canvas>
+        </div>
+        <div class="chart-panel">
+            <h3>Per Perspective</h3>
+            <canvas id="hoursPerPerspectiveChart"></canvas>
+        </div>
+        <div class="chart-panel">
+            <h3>Per Tag</h3>
+            <canvas id="hoursPerTagChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const hoursPerYear = {{ hours_per_year | tojson }};
+    const hoursPerPlatform = {{ hours_per_platform | tojson }};
+    const hoursPerPerspective = {{ hours_per_perspective | tojson }};
+    const hoursPerTag = {{ hours_per_tag | tojson }};
+
+    function renderHoursChart(canvasId, chartData, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            return;
+        }
+
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: chartData.map(item => item.label),
+                datasets: [{
+                    label: 'Total Hours Played',
+                    data: chartData.map(item => item.value),
+                    backgroundColor: color,
+                    borderColor: color.replace('0.7', '1'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    renderHoursChart('hoursPerYearChart', hoursPerYear, 'rgba(75, 192, 192, 0.7)');
+    renderHoursChart('hoursPerPlatformChart', hoursPerPlatform, 'rgba(54, 162, 235, 0.7)');
+    renderHoursChart('hoursPerPerspectiveChart', hoursPerPerspective, 'rgba(255, 159, 64, 0.7)');
+    renderHoursChart('hoursPerTagChart', hoursPerTag, 'rgba(255, 99, 132, 0.7)');
+</script>
+
+<style>
+    .hours-chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+    }
+
+    .chart-panel {
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        padding: 16px;
+    }
+
+    .chart-panel h3 {
+        margin-bottom: 10px;
+        color: #444;
+        font-size: 1rem;
+    }
+
+    .chart-panel canvas {
+        width: 100%;
+        height: 280px;
+    }
+</style>
 {% endblock %}

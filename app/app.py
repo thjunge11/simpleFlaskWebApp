@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 import os
 import json
 from datetime import datetime
@@ -469,13 +470,55 @@ def stats():
         Perspective.perspective_name,
         db.func.count(Game.game_id).label('count')
     ).join(Game).group_by(Perspective.perspective_name).all()
+
+    games = Game.query.options(
+        joinedload(Game.platform),
+        joinedload(Game.perspective),
+        joinedload(Game.tags)
+    ).all()
+
+    hours_per_year = {}
+    hours_per_platform = {}
+    hours_per_perspective = {}
+    hours_per_tag = {}
+
+    for game in games:
+        hours = float(game.playtime or 0)
+        year_label = str(game.played_year) if game.played_year is not None else 'Unknown'
+        platform_label = game.platform.platform_name if game.platform else 'Unknown'
+        perspective_label = game.perspective.perspective_name if game.perspective else 'Unknown'
+
+        hours_per_year[year_label] = hours_per_year.get(year_label, 0) + hours
+        hours_per_platform[platform_label] = hours_per_platform.get(platform_label, 0) + hours
+        hours_per_perspective[perspective_label] = hours_per_perspective.get(perspective_label, 0) + hours
+
+        if game.tags:
+            for tag in game.tags:
+                tag_label = tag.tag_name if tag.tag_name else 'Unknown'
+                hours_per_tag[tag_label] = hours_per_tag.get(tag_label, 0) + hours
+        else:
+            hours_per_tag['Untagged'] = hours_per_tag.get('Untagged', 0) + hours
+
+    def serialize_chart_data(source, sort_years=False):
+        if sort_years:
+            sorted_items = sorted(
+                source.items(),
+                key=lambda item: (item[0] == 'Unknown', int(item[0]) if item[0].isdigit() else 9999)
+            )
+        else:
+            sorted_items = sorted(source.items(), key=lambda item: item[0].lower())
+        return [{'label': key, 'value': round(value, 2)} for key, value in sorted_items]
     
     return render_template('stats.html',
                          total_games=total_games,
                          finished_games=finished_games,
                          total_playtime=total_playtime,
                          platform_stats=platform_stats,
-                         perspective_stats=perspective_stats)
+                         perspective_stats=perspective_stats,
+                         hours_per_year=serialize_chart_data(hours_per_year, sort_years=True),
+                         hours_per_platform=serialize_chart_data(hours_per_platform),
+                         hours_per_perspective=serialize_chart_data(hours_per_perspective),
+                         hours_per_tag=serialize_chart_data(hours_per_tag))
 
 
 # Claude AI helpers

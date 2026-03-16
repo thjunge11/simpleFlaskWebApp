@@ -480,7 +480,7 @@ def stats():
 
 # Claude AI helpers
 def fetch_game_info_from_claude(game_name, release_year=None):
-    """Fetch game description, Metacritic score, and thumbnail URL from Claude."""
+    """Fetch game description and Metacritic score from Claude."""
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY environment variable is not set.")
@@ -491,8 +491,7 @@ def fetch_game_info_from_claude(game_name, release_year=None):
         f'For the video game "{game_name}"{year_info}, return ONLY a JSON object '
         f'with these fields:\n'
         f'{{"description": "1-2 sentence description", '
-        f'"metacritic_score": <integer 0-100 or null>, '
-        f'"thumbnail_url": "direct URL to cover art image or null"}}\n'
+        f'"metacritic_score": <integer 0-100 or null>}}\n'
         f'No markdown, no extra text — JSON only.'
     )
 

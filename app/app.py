@@ -7,12 +7,6 @@ from datetime import datetime
 import redis as redis_lib
 import anthropic
 
-# Read DB config from environment
-DB_USER = os.getenv("DB_USER")
-DB_PASS = os.getenv("DB_PASS")
-DB_HOST = os.getenv("DB_HOST")
-DB_NAME = os.getenv("DB_NAME")
-
 # Redis config
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
@@ -23,14 +17,22 @@ except redis_lib.exceptions.ConnectionError as e:
     print(f"Warning: Could not connect to Redis at startup: {e}")
     redis_client = redis_lib.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
+
+# Flask/SQLAlchemy app setup
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASS")
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'a4f8c2e6b9d1f5a7c3e8b2d6f1a9c4e7b5d2f8a6c1e9b3d7f2a5c8e4b1d6f9a3'
+db = SQLAlchemy(app)
 
+
+# Claude model config
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-3-5-haiku-20241022")
 
-db = SQLAlchemy(app)
 
 # Database Models
 class Game(db.Model):

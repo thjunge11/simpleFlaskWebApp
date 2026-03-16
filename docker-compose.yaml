@@ -24,6 +24,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      CLAUDE_MODEL: ${CLAUDE_MODEL}
 
   db:
     image: postgres:16

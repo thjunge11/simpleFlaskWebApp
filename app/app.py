@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 import os
@@ -27,8 +29,54 @@ DB_NAME = os.getenv("DB_NAME")
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'a4f8c2e6b9d1f5a7c3e8b2d6f1a9c4e7b5d2f8a6c1e9b3d7f2a5c8e4b1d6f9a3'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a4f8c2e6b9d1f5a7c3e8b2d6f1a9c4e7b5d2f8a6c1e9b3d7f2a5c8e4b1d6f9a3')
 db = SQLAlchemy(app)
+
+# --- Authentication ---
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+_LOGIN_USERNAME = os.getenv('LOGIN_USERNAME', '')
+_LOGIN_PASSWORD_HASH = generate_password_hash(os.getenv('LOGIN_PASSWORD', ''))
+
+class AppUser(UserMixin):
+    def get_id(self):
+        return 'admin'
+
+_app_user = AppUser()
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == 'admin':
+        return _app_user
+    return None
+
+@app.before_request
+def require_login():
+    if not current_user.is_authenticated and request.endpoint not in ('login', 'static'):
+        return redirect(url_for('login', next=request.path))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
+        if username == _LOGIN_USERNAME and _LOGIN_USERNAME and check_password_hash(_LOGIN_PASSWORD_HASH, password):
+            login_user(_app_user)
+            next_page = request.args.get('next')
+            if not next_page or not next_page.startswith('/') or next_page.startswith('//'):
+                next_page = url_for('index')
+            return redirect(next_page)
+        flash('Invalid username or password.', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+# --- End Authentication ---
 
 
 # Claude model config

@@ -213,7 +213,14 @@ def index():
 @app.route('/game/<int:id>')
 def view_game(id):
     game = Game.query.get_or_404(id)
-    return render_template('view_game.html', game=game)
+    ai_info = None
+    try:
+        cached = redis_client.get(f"game_info:{game.game_id}")
+        if cached:
+            ai_info = json.loads(cached)
+    except redis_lib.exceptions.ConnectionError:
+        pass
+    return render_template('view_game.html', game=game, ai_info=ai_info)
 
 
 @app.route('/game/create', methods=['GET', 'POST'])
@@ -657,9 +664,12 @@ def game_info():
 @app.route('/game_info/fetch/<int:game_id>', methods=['POST'])
 def fetch_single_game_info(game_id):
     game = Game.query.get_or_404(game_id)
+    next_url = request.args.get('next')
+    if not next_url or not next_url.startswith('/') or next_url.startswith('//'):
+        next_url = url_for('game_info')
     if not os.getenv("ANTHROPIC_API_KEY"):
         flash("ANTHROPIC_API_KEY is not set. Please configure the environment variable.", "danger")
-        return redirect(url_for('game_info'))
+        return redirect(next_url)
     try:
         info = fetch_game_info_from_claude(game.name, game.release_year)
         redis_client.set(f"game_info:{game.game_id}", json.dumps(info))
@@ -668,7 +678,7 @@ def fetch_single_game_info(game_id):
         flash("Redis is not available. Cannot store game info.", "danger")
     except Exception as e:
         flash(f"Error fetching info for \"{game.name}\": {e}", "danger")
-    return redirect(url_for('game_info'))
+    return redirect(next_url)
 
 
 @app.route('/game_info/fetch_new', methods=['POST'])

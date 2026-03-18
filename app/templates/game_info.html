@@ -60,6 +60,11 @@
                     {% else %}
                         <span class="metacritic-badge metacritic-none">No MC score</span>
                     {% endif %}
+                    {% if info.avg_playtime_hours is not none %}
+                        <span class="badge badge-info" title="Average community main-story playtime">⏱ {{ info.avg_playtime_hours }}h avg</span>
+                    {% else %}
+                        <span class="badge" style="background:#eee;color:#999;">⏱ N/A</span>
+                    {% endif %}
                 {% endif %}
                 <span class="badge badge-info">{{ game.platform.platform_name }}</span>
             </div>

@@ -582,7 +582,8 @@ def fetch_game_info_from_claude(game_name, release_year=None):
         f'For the video game "{game_name}"{year_info}, return ONLY a JSON object '
         f'with these fields:\n'
         f'{{"description": "1-2 sentence description", '
-        f'"metacritic_score": <integer 0-100 or null>}}\n'
+        f'"metacritic_score": <integer 0-100 or null>, '
+        f'"avg_playtime_hours": <average community main-story playtime in hours as a number or null>}}\n'
         f'No markdown, no extra text — JSON only.'
     )
 
@@ -609,6 +610,16 @@ def fetch_game_info_from_claude(game_name, release_year=None):
             data["metacritic_score"] = int(raw_score)
         except (ValueError, TypeError):
             data["metacritic_score"] = None
+
+    # Normalize avg_playtime_hours to float or None
+    raw_playtime = data.get("avg_playtime_hours")
+    if raw_playtime is None or raw_playtime == "" or raw_playtime == "null":
+        data["avg_playtime_hours"] = None
+    else:
+        try:
+            data["avg_playtime_hours"] = round(float(raw_playtime), 1)
+        except (ValueError, TypeError):
+            data["avg_playtime_hours"] = None
 
     data["fetched_at"] = datetime.now().isoformat()
     return data

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -726,6 +726,90 @@ def fetch_new_game_info():
     if error_count > 0:
         flash(f"Failed to fetch info for {error_count} game(s).", "danger")
     return redirect(url_for('game_info'))
+
+
+# CSV Export
+@app.route('/export/games.csv')
+def export_games_csv():
+    import csv
+    import io
+
+    finished_filter = request.args.get('finished', '')
+    platform_filter = request.args.get('platform', '')
+    perspective_filter = request.args.get('perspective', '')
+    tag_filter = request.args.get('tag', '')
+    release_year_filter = request.args.get('release_year', '')
+    played_year_filter = request.args.get('played_year', '')
+
+    query = Game.query.options(
+        joinedload(Game.platform),
+        joinedload(Game.perspective),
+        joinedload(Game.tags)
+    )
+
+    if finished_filter == 'yes':
+        query = query.filter(Game.finished == True)
+    elif finished_filter == 'no':
+        query = query.filter(Game.finished == False)
+    if platform_filter:
+        query = query.filter(Game.platform_id == platform_filter)
+    if perspective_filter:
+        query = query.filter(Game.perspective_id == perspective_filter)
+    if tag_filter:
+        query = query.join(Game.tags).filter(CategoryTag.tag_id == tag_filter)
+    if release_year_filter:
+        query = query.filter(Game.release_year == release_year_filter)
+    if played_year_filter:
+        query = query.filter(Game.played_year == played_year_filter)
+
+    games = query.order_by(Game.game_id.asc()).all()
+
+    # Load cached AI info from Redis for matched games
+    ai_cache = {}
+    try:
+        for game in games:
+            cached = redis_client.get(f"game_info:{game.game_id}")
+            if cached:
+                ai_cache[game.game_id] = json.loads(cached)
+    except redis_lib.exceptions.ConnectionError:
+        pass
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        'game_id', 'name', 'release_year', 'played_year',
+        'platform', 'perspective', 'tags',
+        'playtime_hours', 'finished', 'finished_at', 'comments',
+        'ai_description', 'metacritic_score', 'avg_playtime_hours', 'ai_fetched_at'
+    ])
+
+    for game in games:
+        ai = ai_cache.get(game.game_id, {})
+        writer.writerow([
+            game.game_id,
+            game.name,
+            game.release_year or '',
+            game.played_year or '',
+            game.platform.platform_name if game.platform else '',
+            game.perspective.perspective_name if game.perspective else '',
+            '|'.join(t.tag_name for t in game.tags),
+            game.playtime or '',
+            game.finished,
+            game.finished_at.isoformat() if game.finished_at else '',
+            game.comments or '',
+            ai.get('description', ''),
+            ai.get('metacritic_score', ''),
+            ai.get('avg_playtime_hours', ''),
+            (ai.get('fetched_at', '')[:19].replace('T', ' ')) if ai.get('fetched_at') else '',
+        ])
+
+    output.seek(0)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename=games_{timestamp}.csv'}
+    )
 
 
 if __name__ == '__main__':

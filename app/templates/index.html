@@ -41,6 +41,20 @@
                 </option>
             {% endfor %}
         </select>
+
+        <select name="release_year" onchange="this.form.submit()">
+            <option value="">All Release Years</option>
+            {% for year in release_years %}
+                <option value="{{ year }}" {% if release_year_filter == year|string %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="played_year" onchange="this.form.submit()">
+            <option value="">All Played Years</option>
+            {% for year in played_years %}
+                <option value="{{ year }}" {% if played_year_filter == year|string %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
         
         <label style="margin-left: 20px;"><strong>Sort:</strong></label>
         
@@ -61,7 +75,7 @@
             <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending ↓</option>
         </select>
         
-        {% if finished_filter or platform_filter or perspective_filter or tag_filter %}
+        {% if finished_filter or platform_filter or perspective_filter or tag_filter or release_year_filter or played_year_filter %}
             <a href="{{ url_for('index') }}" class="btn btn-sm btn-secondary">Clear Filters</a>
         {% endif %}
     </form>
@@ -73,48 +87,48 @@
     <thead>
         <tr>
             <th>
-                <a href="{{ url_for('index', sort='game_id', order='asc' if sort_by == 'game_id' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='game_id', order='asc' if sort_by == 'game_id' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     ID {% if sort_by == 'game_id' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>
-                <a href="{{ url_for('index', sort='name', order='asc' if sort_by == 'name' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='name', order='asc' if sort_by == 'name' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Name {% if sort_by == 'name' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>
-                <a href="{{ url_for('index', sort='release_year', order='asc' if sort_by == 'release_year' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='release_year', order='asc' if sort_by == 'release_year' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Release Year {% if sort_by == 'release_year' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>
-                <a href="{{ url_for('index', sort='played_year', order='asc' if sort_by == 'played_year' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='played_year', order='asc' if sort_by == 'played_year' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Played Year {% if sort_by == 'played_year' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>Tags</th>
             <th>
-                <a href="{{ url_for('index', sort='platform', order='asc' if sort_by == 'platform' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='platform', order='asc' if sort_by == 'platform' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Platform {% if sort_by == 'platform' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>
-                <a href="{{ url_for('index', sort='perspective', order='asc' if sort_by == 'perspective' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='perspective', order='asc' if sort_by == 'perspective' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Perspective {% if sort_by == 'perspective' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>
-                <a href="{{ url_for('index', sort='playtime', order='asc' if sort_by == 'playtime' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='playtime', order='asc' if sort_by == 'playtime' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Playtime (h) {% if sort_by == 'playtime' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>
-                <a href="{{ url_for('index', sort='finished', order='asc' if sort_by == 'finished' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='finished', order='asc' if sort_by == 'finished' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Status {% if sort_by == 'finished' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
             <th>
-                <a href="{{ url_for('index', sort='finished_at', order='asc' if sort_by == 'finished_at' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter) }}" style="color: inherit; text-decoration: none;">
+                <a href="{{ url_for('index', sort='finished_at', order='asc' if sort_by == 'finished_at' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Finished At {% if sort_by == 'finished_at' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
             </th>
@@ -162,12 +176,12 @@
 
 <div class="pagination">
     {% if games.has_prev %}
-        <a href="{{ url_for('index', page=games.prev_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, sort=sort_by, order=sort_order) }}">← Previous</a>
+        <a href="{{ url_for('index', page=games.prev_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter, sort=sort_by, order=sort_order) }}">← Previous</a>
     {% endif %}
     
     {% for page_num in games.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
         {% if page_num %}
-            <a href="{{ url_for('index', page=page_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, sort=sort_by, order=sort_order) }}" 
+            <a href="{{ url_for('index', page=page_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter, sort=sort_by, order=sort_order) }}" 
                class="{% if page_num == games.page %}active{% endif %}">{{ page_num }}</a>
         {% else %}
             <span>...</span>
@@ -175,7 +189,7 @@
     {% endfor %}
     
     {% if games.has_next %}
-        <a href="{{ url_for('index', page=games.next_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, sort=sort_by, order=sort_order) }}">Next →</a>
+        <a href="{{ url_for('index', page=games.next_num, finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter, sort=sort_by, order=sort_order) }}">Next →</a>
     {% endif %}
 </div>
 {% endblock %}

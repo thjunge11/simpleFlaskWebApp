@@ -143,6 +143,8 @@ def index():
     platform_filter = request.args.get('platform', '')
     perspective_filter = request.args.get('perspective', '')
     tag_filter = request.args.get('tag', '')
+    release_year_filter = request.args.get('release_year', '')
+    played_year_filter = request.args.get('played_year', '')
     
     # Sorting
     sort_by = request.args.get('sort', 'game_id')
@@ -163,7 +165,13 @@ def index():
     
     if tag_filter:
         query = query.join(Game.tags).filter(CategoryTag.tag_id == tag_filter)
-    
+
+    if release_year_filter:
+        query = query.filter(Game.release_year == release_year_filter)
+
+    if played_year_filter:
+        query = query.filter(Game.played_year == played_year_filter)
+
     # Apply sorting
     if sort_by == 'name':
         order_column = Game.name
@@ -196,16 +204,22 @@ def index():
     platforms = Platform.query.all()
     perspectives = Perspective.query.all()
     tags = CategoryTag.query.order_by(CategoryTag.tag_name).all()
-    
-    return render_template('index.html', 
-                         games=games, 
-                         platforms=platforms, 
+    release_years = [r[0] for r in db.session.query(Game.release_year).filter(Game.release_year.isnot(None)).distinct().order_by(Game.release_year.asc()).all()]
+    played_years = [r[0] for r in db.session.query(Game.played_year).filter(Game.played_year.isnot(None)).distinct().order_by(Game.played_year.asc()).all()]
+
+    return render_template('index.html',
+                         games=games,
+                         platforms=platforms,
                          perspectives=perspectives,
                          tags=tags,
+                         release_years=release_years,
+                         played_years=played_years,
                          finished_filter=finished_filter,
                          platform_filter=platform_filter,
                          perspective_filter=perspective_filter,
                          tag_filter=tag_filter,
+                         release_year_filter=release_year_filter,
+                         played_year_filter=played_year_filter,
                          sort_by=sort_by,
                          sort_order=sort_order)
 

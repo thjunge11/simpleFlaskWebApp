@@ -142,7 +142,7 @@
         {% for game in games.items %}
         <tr>
             <td>{{ game.game_id }}</td>
-            <td><strong>{{ game.name }}</strong></td>
+            <td><strong><a href="{{ url_for('view_game', id=game.game_id) }}" style="text-decoration:none;color:inherit;">{{ game.name }}</a></strong></td>
             <td>{{ game.release_year or '-' }}</td>
             <td>{{ game.played_year or '-' }}</td>
             <td>

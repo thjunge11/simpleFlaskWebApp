@@ -89,6 +89,7 @@ class Game(db.Model):
     
     game_id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.Text, nullable=False)
+    started_at = db.Column(db.Date)
     finished_at = db.Column(db.Date)
     perspective_id = db.Column(db.Integer, db.ForeignKey('perspectives.perspective_id'), nullable=False)
     platform_id = db.Column(db.Integer, db.ForeignKey('platforms.platform_id'), nullable=False)
@@ -181,6 +182,8 @@ def index():
         order_column = Game.finished
     elif sort_by == 'finished_at':
         order_column = Game.finished_at
+    elif sort_by == 'started_at':
+        order_column = Game.started_at
     elif sort_by == 'release_year':
         order_column = Game.release_year
     elif sort_by == 'played_year':
@@ -240,6 +243,16 @@ def view_game(id):
 @app.route('/game/create', methods=['GET', 'POST'])
 def create_game():
     if request.method == 'POST':
+        # Parse started_at date
+        started_at_str = request.form.get('started_at')
+        started_at = None
+        if started_at_str:
+            try:
+                started_at = datetime.strptime(started_at_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Invalid date format. Please use YYYY-MM-DD', 'danger')
+                return redirect(url_for('create_game'))
+
         # Parse finished_at date
         finished_at_str = request.form.get('finished_at')
         finished_at = None
@@ -252,6 +265,7 @@ def create_game():
         
         game = Game(
             name=request.form.get('name'),
+            started_at=started_at,
             finished_at=finished_at,
             perspective_id=request.form.get('perspective_id'),
             platform_id=request.form.get('platform_id'),
@@ -286,6 +300,16 @@ def edit_game(id):
     game = Game.query.get_or_404(id)
     
     if request.method == 'POST':
+        # Parse started_at date
+        started_at_str = request.form.get('started_at')
+        started_at = None
+        if started_at_str:
+            try:
+                started_at = datetime.strptime(started_at_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Invalid date format. Please use YYYY-MM-DD', 'danger')
+                return redirect(url_for('edit_game', id=id))
+
         # Parse finished_at date
         finished_at_str = request.form.get('finished_at')
         finished_at = None
@@ -297,6 +321,7 @@ def edit_game(id):
                 return redirect(url_for('edit_game', id=id))
         
         game.name = request.form.get('name')
+        game.started_at = started_at
         game.finished_at = finished_at
         game.perspective_id = request.form.get('perspective_id')
         game.platform_id = request.form.get('platform_id')
@@ -779,7 +804,7 @@ def export_games_csv():
     writer.writerow([
         'game_id', 'name', 'release_year', 'played_year',
         'platform', 'perspective', 'tags',
-        'playtime_hours', 'finished', 'finished_at', 'comments',
+        'playtime_hours', 'finished', 'started_at', 'finished_at', 'comments',
         'ai_description', 'metacritic_score', 'avg_playtime_hours', 'ai_fetched_at'
     ])
 
@@ -795,6 +820,7 @@ def export_games_csv():
             '|'.join(t.tag_name for t in game.tags),
             game.playtime or '',
             game.finished,
+            game.started_at.isoformat() if game.started_at else '',
             game.finished_at.isoformat() if game.finished_at else '',
             game.comments or '',
             ai.get('description', ''),

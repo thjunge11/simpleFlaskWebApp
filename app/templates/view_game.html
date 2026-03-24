@@ -21,6 +21,7 @@
                 <span class="badge badge-warning">⏳ In Progress</span>
             {% endif %}
         </td></tr>
+        <tr><td>Started At</td><td>{{ game.started_at.strftime('%d.%m.%Y') if game.started_at else '-' }}</td></tr>
         <tr><td>Finished At</td><td>{{ game.finished_at.strftime('%d.%m.%Y') if game.finished_at else 'Not finished yet' }}</td></tr>
         <tr><td>Tags</td><td>
             <div class="tag-list">

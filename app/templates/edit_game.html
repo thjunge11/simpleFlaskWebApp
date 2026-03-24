@@ -61,6 +61,11 @@
     </div>
     
     <div class="form-group">
+        <label>Started At</label>
+        <input type="date" name="started_at" value="{{ game.started_at.strftime('%Y-%m-%d') if game.started_at else '' }}">
+    </div>
+    
+    <div class="form-group">
         <label>Finished At</label>
         <input type="date" name="finished_at" value="{{ game.finished_at.strftime('%Y-%m-%d') if game.finished_at else '' }}">
     </div>

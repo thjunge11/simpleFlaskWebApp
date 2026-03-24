@@ -68,6 +68,7 @@
             <option value="playtime" {% if sort_by == 'playtime' %}selected{% endif %}>Playtime</option>
             <option value="finished" {% if sort_by == 'finished' %}selected{% endif %}>Status</option>
             <option value="finished_at" {% if sort_by == 'finished_at' %}selected{% endif %}>Finished Date</option>
+            <option value="started_at" {% if sort_by == 'started_at' %}selected{% endif %}>Started Date</option>
         </select>
         
         <select name="order" onchange="this.form.submit()">
@@ -131,6 +132,11 @@
                 </a>
             </th>
             <th>
+                <a href="{{ url_for('index', sort='started_at', order='asc' if sort_by == 'started_at' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
+                    Started At {% if sort_by == 'started_at' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
+                </a>
+            </th>
+            <th>
                 <a href="{{ url_for('index', sort='finished_at', order='asc' if sort_by == 'finished_at' and sort_order == 'desc' else 'desc', finished=finished_filter, platform=platform_filter, perspective=perspective_filter, tag=tag_filter, release_year=release_year_filter, played_year=played_year_filter) }}" style="color: inherit; text-decoration: none;">
                     Finished At {% if sort_by == 'finished_at' %}{{ '↓' if sort_order == 'desc' else '↑' }}{% endif %}
                 </a>
@@ -164,6 +170,7 @@
                     <span class="badge badge-warning">⏳ In Progress</span>
                 {% endif %}
             </td>
+            <td>{{ game.started_at.strftime('%d.%m.%Y') if game.started_at else '-' }}</td>
             <td>{{ game.finished_at.strftime('%d.%m.%Y') if game.finished_at else '-' }}</td>
             <td style="white-space: nowrap;">
                 <a href="{{ url_for('view_game', id=game.game_id) }}" class="btn btn-sm btn-primary">View</a>

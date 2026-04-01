@@ -811,6 +811,7 @@ def export_games_csv():
         'game_id', 'name', 'release_year', 'played_year',
         'platform', 'perspective', 'tags',
         'playtime_hours', 'finished', 'started_at', 'finished_at', 'comments',
+        'personal_score', 'personal_review',
         'ai_description', 'metacritic_score', 'avg_playtime_hours', 'ai_fetched_at'
     ])
 
@@ -829,6 +830,8 @@ def export_games_csv():
             game.started_at.isoformat() if game.started_at else '',
             game.finished_at.isoformat() if game.finished_at else '',
             game.comments or '',
+            game.personal_score if game.personal_score is not None else '',
+            game.personal_review or '',
             ai.get('description', ''),
             ai.get('metacritic_score', ''),
             ai.get('avg_playtime_hours', ''),

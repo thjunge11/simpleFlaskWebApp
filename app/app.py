@@ -98,6 +98,8 @@ class Game(db.Model):
     release_year = db.Column(db.SmallInteger)
     played_year = db.Column(db.SmallInteger)
     comments = db.Column(db.Text)
+    personal_score = db.Column(db.SmallInteger)
+    personal_review = db.Column(db.Text)
     
     # Relationships
     perspective = db.relationship('Perspective', backref='games')
@@ -273,7 +275,9 @@ def create_game():
             playtime=request.form.get('playtime') if request.form.get('playtime') else None,
             release_year=request.form.get('release_year') if request.form.get('release_year') else None,
             played_year=request.form.get('played_year') if request.form.get('played_year') else None,
-            comments=request.form.get('comments') if request.form.get('comments') else None
+            comments=request.form.get('comments') if request.form.get('comments') else None,
+            personal_score=request.form.get('personal_score') if request.form.get('personal_score') else None,
+            personal_review=request.form.get('personal_review') if request.form.get('personal_review') else None
         )
         
         db.session.add(game)
@@ -330,6 +334,8 @@ def edit_game(id):
         game.release_year = request.form.get('release_year') if request.form.get('release_year') else None
         game.played_year = request.form.get('played_year') if request.form.get('played_year') else None
         game.comments = request.form.get('comments') if request.form.get('comments') else None
+        game.personal_score = request.form.get('personal_score') if request.form.get('personal_score') else None
+        game.personal_review = request.form.get('personal_review') if request.form.get('personal_review') else None
                 
         GameCategoryTag.query.filter_by(game_id=game.game_id).delete()
         

@@ -33,6 +33,14 @@
             </div>
         </td></tr>
         <tr><td>Comments</td><td>{{ game.comments or '-' }}</td></tr>
+        <tr><td>Personal Score</td><td>
+            {% if game.personal_score is not none %}
+                <strong>{{ game.personal_score }}/10</strong>
+            {% else %}
+                -
+            {% endif %}
+        </td></tr>
+        <tr><td>Personal Review</td><td>{{ game.personal_review or '-' }}</td></tr>
     </table>
 </div>
 

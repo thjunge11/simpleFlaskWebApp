@@ -91,7 +91,9 @@ CREATE TABLE public.games (
     release_year smallint,
     comments text,
     finished_at date,
-    played_year smallint DEFAULT EXTRACT(year FROM CURRENT_DATE)
+    played_year smallint DEFAULT EXTRACT(year FROM CURRENT_DATE),
+    personal_score smallint,
+    personal_review text
 );
 
 

@@ -12,6 +12,7 @@ entity "games" as games {
   played_year : smallint <<default CURRENT_YEAR>>
   comments : text
   finished_at : date
+  started_at : date
   personal_score : smallint
   personal_review : text
 }

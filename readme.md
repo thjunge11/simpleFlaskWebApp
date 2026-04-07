@@ -1,6 +1,6 @@
 # 🎮 Gaming Database App
 
-A Flask web application for managing and browsing a gaming database, containerized with Docker and powered by PostgreSQL.
+A Flask web application for managing and browsing a gaming database, containerized with Docker and powered by PostgreSQL. Features a secure HTTPS reverse proxy via Nginx, Redis caching, user authentication, and AI-powered game info via the Anthropic Claude API.
 
 ---
 
@@ -12,58 +12,84 @@ A Flask web application for managing and browsing a gaming database, containeriz
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
-- [Database preparation](#database-preparation)
+- [Database Preparation](#database-preparation)
 - [Running the App](#running-the-app)
 - [Accessing the App](#accessing-the-app)
+- [Authentication](#authentication)
 - [Database](#database)
+- [Redis Caching](#redis-caching)
+- [AI Features](#ai-features)
 - [Stopping the App](#stopping-the-app)
 - [Development](#development)
+- [Security Notes](#security-notes)
 - [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Overview
 
-This application provides a full CRUD interface for managing a gaming library database. It supports browsing, filtering, sorting, and editing games, platforms, perspectives, and category tags.
+This application provides a full CRUD interface for managing a gaming library database. It supports browsing, filtering, sorting, and editing games, platforms, perspectives, and category tags. The app is served over HTTPS through an Nginx reverse proxy, uses Redis for caching, requires login authentication, and integrates with the Anthropic Claude API for AI-generated game information.
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer      | Technology         |
-|------------|--------------------|
-| Backend    | Python / Flask     |
-| Database   | PostgreSQL 16      |
-| ORM        | SQLAlchemy         |
-| Templating | Jinja2             |
-| Container  | Docker / Compose   |
+| Layer          | Technology              |
+|----------------|-------------------------|
+| Backend        | Python / Flask          |
+| Database       | PostgreSQL 16           |
+| ORM            | SQLAlchemy              |
+| Templating     | Jinja2                  |
+| Authentication | Flask-Login             |
+| Caching        | Redis 7                 |
+| Reverse Proxy  | Nginx (HTTPS)           |
+| AI Integration | Anthropic Claude API    |
+| Container      | Docker / Compose        |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-project/
+simpleFlaskWebApp/
 ├── app/
 │   ├── Dockerfile
 │   ├── app.py
 │   ├── requirements.txt
 │   └── templates/
 │       ├── base.html
+│       ├── login.html
 │       ├── index.html
 │       ├── view_game.html
+│       ├── game_info.html
 │       ├── create_game.html
 │       ├── edit_game.html
 │       ├── search.html
+│       ├── timeline.html
 │       ├── platforms.html
+│       ├── create_platform.html
+│       ├── edit_platform.html
 │       ├── perspectives.html
+│       ├── create_perspective.html
+│       ├── edit_perspective.html
 │       ├── tags.html
+│       ├── create_tag.html
+│       ├── edit_tag.html
+│       ├── comments.html
 │       └── stats.html
-├── docker-compose.yml
+├── nginx/
+│   ├── Dockerfile
+│   └── nginx.conf
+├── utils/
+│   ├── assets/
+│   ├── db_struct.sql
+│   ├── deploy_to_EC2.md
+│   └── ...
+├── docker-compose.yaml
 ├── .env
 ├── .env.example
 ├── .gitignore
-└── README.md
+└── readme.md
 ```
 
 ---
@@ -123,6 +149,21 @@ DB_HOST=db
 DB_NAME=gaming
 DB_USER=postgres
 DB_PASS=your_secure_password_here
+
+# Flask
+SECRET_KEY=your_flask_secret_key_here
+
+# Authentication
+LOGIN_USERNAME=admin
+LOGIN_PASSWORD=your_login_password_here
+
+# Redis (optional overrides; defaults match docker-compose)
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# Anthropic Claude AI
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+CLAUDE_MODEL=claude-3-5-haiku-20241022
 ```
 
 ### `.env.example`
@@ -132,14 +173,22 @@ DB_HOST=db
 DB_NAME=gaming
 DB_USER=postgres
 DB_PASS=changeme
+SECRET_KEY=changeme
+LOGIN_USERNAME=admin
+LOGIN_PASSWORD=changeme
+REDIS_HOST=redis
+REDIS_PORT=6379
+ANTHROPIC_API_KEY=
+CLAUDE_MODEL=claude-3-5-haiku-20241022
 ```
 
 > ⚠️ **Never commit your `.env` file to version control.** It is already included in `.gitignore`.
 
 ---
 
-## ⚙️ Database preparation
-The postgres database structure can be setup with the SQL code in `db_struct_2026-02-24_145629.sql`
+## ⚙️ Database Preparation
+
+The PostgreSQL database structure can be set up with the SQL script found in `utils/db_struct.sql`.
 
 ### Database structure:
 
@@ -179,8 +228,12 @@ docker compose up
 
 | Service    | URL                          |
 |------------|------------------------------|
-| Web App    | http://localhost:5000        |
+| Web App    | https://localhost            |
+| Web App (HTTP, redirects to HTTPS) | http://localhost |
 | PostgreSQL | localhost:**5435**           |
+| Redis      | localhost:**6379**           |
+
+> Traffic is served over HTTPS via the Nginx reverse proxy. HTTP requests on port 80 are automatically redirected to HTTPS on port 443. The self-signed certificate generated at build time will trigger a browser warning — this is expected for local/dev use.
 
 > The PostgreSQL port is mapped to `5435` (instead of the default `5432`) to avoid conflicts with any local PostgreSQL installation.
 
@@ -199,6 +252,21 @@ Database: gaming (or your DB_NAME value)
 User:     postgres (or your DB_USER value)
 Password: your_secure_password_here
 ```
+
+---
+
+## 🔐 Authentication
+
+The app requires a login to access any page. Credentials are configured via environment variables:
+
+```env
+LOGIN_USERNAME=admin
+LOGIN_PASSWORD=your_login_password_here
+```
+
+- Visit https://localhost — you will be redirected to the login page automatically.
+- After logging in, you will be redirected back to the originally requested page.
+- Use the logout link in the navigation bar to end your session.
 
 ---
 
@@ -236,6 +304,40 @@ cat backup.sql | docker compose exec -T db psql -U postgres -d gaming
 
 ---
 
+## ⚡ Redis Caching
+
+Redis is used to cache frequently accessed data and improve response times. It runs as a separate container (`redis:7-alpine`) with:
+
+- **Persistent storage** via a named Docker volume (`redis_data_volume`).
+- **Health checks** to ensure Redis is ready before the web app starts.
+
+### View Redis logs
+
+```bash
+docker compose logs -f redis
+```
+
+### Connect to Redis CLI
+
+```bash
+docker compose exec redis redis-cli
+```
+
+---
+
+## 🤖 AI Features
+
+The app integrates with the **Anthropic Claude API** to provide AI-generated game information. Set your API key and preferred model in `.env`:
+
+```env
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+CLAUDE_MODEL=claude-3-5-haiku-20241022
+```
+
+If `ANTHROPIC_API_KEY` is not set, AI-powered features will not be available but the rest of the app will work normally.
+
+---
+
 ## 🛑 Stopping the App
 
 ### Stop containers (keep data)
@@ -265,6 +367,12 @@ docker compose logs -f web
 
 # Database only
 docker compose logs -f db
+
+# Nginx only
+docker compose logs -f nginx
+
+# Redis only
+docker compose logs -f redis
 ```
 
 ### Restart a single service
@@ -292,14 +400,14 @@ docker compose up --build
 
 ## 🔒 Security Notes
 
-- Change the default `DB_PASS` to a strong password before deploying
+- Change the default `DB_PASS` and `LOGIN_PASSWORD` to strong values before deploying.
 - Generate a secure Flask `SECRET_KEY`:
   ```bash
   python -c "import secrets; print(secrets.token_hex(32))"
   ```
-- Never expose the database port (`5435`) publicly in production
-- Use HTTPS in production with a reverse proxy (e.g. nginx)
-- Note: ssl_context='adhoc' generates a new cert on every restart, which is fine for local/dev use. For production, you'd want a real cert (e.g., Let's Encrypt via nginx) or mount a persistent cert file into the container.
+- Never expose the database port (`5435`) or Redis port (`6379`) publicly in production.
+- The Nginx container generates a self-signed TLS certificate at build time (valid for localhost/dev). For production, replace it with a certificate from a trusted CA (e.g., Let's Encrypt).
+- Keep your `ANTHROPIC_API_KEY` secret and never commit it to version control.
 
 ---
 
@@ -317,14 +425,27 @@ docker compose logs db
 docker compose ps
 ```
 
+### Web app can't connect to Redis
+
+The web service also waits for the Redis health check. Check Redis logs:
+
+```bash
+docker compose logs redis
+```
+
 ### Port already in use
 
-If port `5000` or `5435` is already in use, change the mapping in `docker-compose.yml`:
+If port `80`, `443`, or `5435` is already in use, change the mapping in `docker-compose.yaml`:
 
 ```yaml
 ports:
-  - "5001:5000"   # Change 5000 to another port
+  - "8080:80"   # Change 80 to another port
+  - "8443:443"  # Change 443 to another port
 ```
+
+### Browser shows a certificate warning
+
+The Nginx container uses a self-signed certificate generated at build time. This is expected for local development. Accept the warning to proceed.
 
 ### Data not persisting
 
@@ -340,7 +461,6 @@ docker compose up --build
 ---
 
 ## 📝 License
-
 
 This project is licensed under the MIT License.
 

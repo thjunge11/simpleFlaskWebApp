@@ -2,6 +2,8 @@
 
 A Flask web application for managing and browsing a gaming database, containerized with Docker and powered by PostgreSQL. Features a secure HTTPS reverse proxy via Nginx, Redis caching, user authentication, and AI-powered game info via the Anthropic Claude API.
 
+![](./utils/assets/screen_1.png)
+
 ---
 
 ## 📋 Table of Contents

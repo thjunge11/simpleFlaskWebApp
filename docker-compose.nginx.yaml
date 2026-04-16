@@ -3,6 +3,7 @@
 services:
   nginx:
     build: nginx
+    container_name: nginx_proxy
     ports:
       - "80:80"
       - "443:443"

@@ -2,7 +2,8 @@
 # Requires the shared proxy network to exist: docker network create proxy_net
 services:
   web:
-    build: app
+    build: ./app
+    container_name: gamingapp_web
     expose:
       - "5000"
     depends_on:
@@ -28,6 +29,7 @@ services:
 
   db:
     image: postgres:16
+    container_name: gamingapp_db
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -46,6 +48,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: gamingapp_redis
     ports:
       - "6379:6379"
     volumes:

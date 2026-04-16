@@ -1,0 +1,15 @@
+# Nginx reverse proxy — shared across all app stacks
+# Requires the shared proxy network to exist: docker network create proxy_net
+services:
+  nginx:
+    build: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+networks:
+  proxy_net:
+    external: true

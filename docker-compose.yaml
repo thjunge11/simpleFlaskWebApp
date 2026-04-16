@@ -1,14 +1,9 @@
+# App stack: web, db, redis
+# Requires the shared proxy network to exist: docker network create proxy_net
 services:
-  nginx:
-    build: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - web
-
   web:
-    build: app
+    build: ./app
+    container_name: gamingapp_web
     expose:
       - "5000"
     depends_on:
@@ -28,11 +23,15 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       LOGIN_USERNAME: ${LOGIN_USERNAME}
       LOGIN_PASSWORD: ${LOGIN_PASSWORD}
+    networks:
+      - app_net
+      - proxy_net
 
   db:
     image: postgres:16
+    container_name: gamingapp_db
     environment:
-      POSTGRES_DB: ${DB_NAME} 
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
     volumes:
@@ -44,9 +43,12 @@ services:
       retries: 5
     ports:
       - "5435:5432"
+    networks:
+      - app_net
 
   redis:
     image: redis:7-alpine
+    container_name: gamingapp_redis
     ports:
       - "6379:6379"
     volumes:
@@ -56,7 +58,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_net
 
 volumes:
   postgres_data_volume:
   redis_data_volume:
+
+networks:
+  app_net:
+  proxy_net:
+    external: true

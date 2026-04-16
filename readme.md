@@ -136,7 +136,14 @@ nano .env
 ### 3. Build and start the containers
 
 ```bash
-docker compose up --build
+# Once — create the shared network
+docker network create proxy_net
+
+# Start nginx (can stay running permanently)
+docker compose -f docker-compose.nginx.yaml up -d
+
+# Start the app stack
+docker compose up -d
 ```
 
 ---

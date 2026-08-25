@@ -1,4 +1,4 @@
-# App stack: web, db, redis
+# App stack: web, db
 # Requires the shared proxy network to exist: docker network create proxy_net
 services:
   web:
@@ -9,15 +9,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       CLAUDE_MODEL: ${CLAUDE_MODEL}
       SECRET_KEY: ${SECRET_KEY}
@@ -48,25 +44,8 @@ services:
       - app_net
     restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
-    container_name: gamingapp_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data_volume:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app_net
-    restart: unless-stopped
-
 volumes:
   postgres_data_volume:
-  redis_data_volume:
 
 networks:
   app_net:

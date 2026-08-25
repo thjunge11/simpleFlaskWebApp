@@ -7,18 +7,7 @@ from sqlalchemy.orm import joinedload
 import os
 import json
 from datetime import datetime
-import redis as redis_lib
 import anthropic
-
-# Redis config
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
-try:
-    redis_client = redis_lib.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-    redis_client.ping()
-except redis_lib.exceptions.ConnectionError as e:
-    print(f"Warning: Could not connect to Redis at startup: {e}")
-    redis_client = redis_lib.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 
 # Flask/SQLAlchemy app setup
@@ -80,7 +69,7 @@ def logout():
 
 
 # Claude model config
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-3-5-haiku-20241022")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-4.1")
 
 
 # Database Models
@@ -100,6 +89,9 @@ class Game(db.Model):
     comments = db.Column(db.Text)
     personal_score = db.Column(db.SmallInteger)
     personal_review = db.Column(db.Text)
+    description = db.Column(db.Text)
+    metascore = db.Column(db.SmallInteger)
+    average_playtime = db.Column(db.Numeric)
     
     # Relationships
     perspective = db.relationship('Perspective', backref='games')
@@ -133,6 +125,39 @@ class GameCategoryTag(db.Model):
     
     tag_id = db.Column(db.Integer, db.ForeignKey('category_tags.tag_id'), primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('games.game_id'), primary_key=True)
+
+
+class GameAiInfo(db.Model):
+    __tablename__ = 'game_ai_info'
+
+    game_id = db.Column(db.BigInteger, db.ForeignKey('games.game_id'), primary_key=True)
+    description = db.Column(db.Text)
+    metacritic_score = db.Column(db.SmallInteger)
+    avg_playtime_hours = db.Column(db.Numeric)
+    fetched_at = db.Column(db.DateTime)
+
+    game = db.relationship('Game', backref=db.backref('ai_info', uselist=False))
+
+    def to_dict(self):
+        return {
+            'description': self.description,
+            'metacritic_score': self.metacritic_score,
+            'avg_playtime_hours': float(self.avg_playtime_hours) if self.avg_playtime_hours is not None else None,
+            'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None,
+        }
+
+
+def save_game_ai_info(game_id, info):
+    """Upsert AI-fetched game info into the game_ai_info table."""
+    record = GameAiInfo.query.get(game_id)
+    if record is None:
+        record = GameAiInfo(game_id=game_id)
+        db.session.add(record)
+    record.description = info.get('description')
+    record.metacritic_score = info.get('metacritic_score')
+    record.avg_playtime_hours = info.get('avg_playtime_hours')
+    record.fetched_at = datetime.now()
+    db.session.commit()
 
 
 # Routes - Games
@@ -232,13 +257,8 @@ def index():
 @app.route('/game/<int:id>')
 def view_game(id):
     game = Game.query.get_or_404(id)
-    ai_info = None
-    try:
-        cached = redis_client.get(f"game_info:{game.game_id}")
-        if cached:
-            ai_info = json.loads(cached)
-    except redis_lib.exceptions.ConnectionError:
-        pass
+    ai_info_row = GameAiInfo.query.get(game.game_id)
+    ai_info = ai_info_row.to_dict() if ai_info_row else None
     return render_template('view_game.html', game=game, ai_info=ai_info)
 
 
@@ -681,22 +701,8 @@ def fetch_game_info_from_claude(game_name, release_year=None):
 @app.route('/game_info')
 def game_info():
     games = Game.query.order_by(Game.name.asc()).all()
-    games_with_info = []
-    redis_available = True
-    for game in games:
-        info = None
-        try:
-            cached = redis_client.get(f"game_info:{game.game_id}")
-            if cached:
-                info = json.loads(cached)
-        except redis_lib.exceptions.ConnectionError:
-            redis_available = False
-            break
-        games_with_info.append((game, info))
-
-    if not redis_available:
-        flash("Redis is not available. Cannot load cached game info.", "danger")
-        games_with_info = [(g, None) for g in games]
+    ai_info_map = {row.game_id: row.to_dict() for row in GameAiInfo.query.all()}
+    games_with_info = [(game, ai_info_map.get(game.game_id)) for game in games]
 
     total = len(games_with_info)
     cached_count = sum(1 for _, info in games_with_info if info)
@@ -717,10 +723,8 @@ def fetch_single_game_info(game_id):
         return redirect(next_url)
     try:
         info = fetch_game_info_from_claude(game.name, game.release_year)
-        redis_client.set(f"game_info:{game.game_id}", json.dumps(info))
+        save_game_ai_info(game.game_id, info)
         flash(f"Info for \"{game.name}\" fetched successfully!", "success")
-    except redis_lib.exceptions.ConnectionError:
-        flash("Redis is not available. Cannot store game info.", "danger")
     except Exception as e:
         flash(f"Error fetching info for \"{game.name}\": {e}", "danger")
     return redirect(next_url)
@@ -732,19 +736,15 @@ def fetch_new_game_info():
         flash("ANTHROPIC_API_KEY is not set. Please configure the environment variable.", "danger")
         return redirect(url_for('game_info'))
     games = Game.query.order_by(Game.game_id.asc()).all()
+    cached_ids = {row.game_id for row in GameAiInfo.query.with_entities(GameAiInfo.game_id).all()}
     fetched_count = 0
     error_count = 0
     for game in games:
-        try:
-            cached = redis_client.get(f"game_info:{game.game_id}")
-        except redis_lib.exceptions.ConnectionError:
-            flash("Redis is not available. Cannot fetch game info.", "danger")
-            return redirect(url_for('game_info'))
-        if cached:
+        if game.game_id in cached_ids:
             continue
         try:
             info = fetch_game_info_from_claude(game.name, game.release_year)
-            redis_client.set(f"game_info:{game.game_id}", json.dumps(info))
+            save_game_ai_info(game.game_id, info)
             fetched_count += 1
         except Exception as e:
             print(f"Error fetching info for game {game.game_id} ({game.name}): {e}")
@@ -795,15 +795,11 @@ def export_games_csv():
 
     games = query.order_by(Game.game_id.asc()).all()
 
-    # Load cached AI info from Redis for matched games
-    ai_cache = {}
-    try:
-        for game in games:
-            cached = redis_client.get(f"game_info:{game.game_id}")
-            if cached:
-                ai_cache[game.game_id] = json.loads(cached)
-    except redis_lib.exceptions.ConnectionError:
-        pass
+    # Load cached AI info from the database for matched games
+    ai_cache = {
+        row.game_id: row.to_dict()
+        for row in GameAiInfo.query.filter(GameAiInfo.game_id.in_([g.game_id for g in games])).all()
+    }
 
     output = io.StringIO()
     writer = csv.writer(output)

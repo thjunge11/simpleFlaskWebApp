@@ -66,6 +66,22 @@ ALTER TABLE public.category_tags ALTER COLUMN tag_id ADD GENERATED ALWAYS AS IDE
 
 
 --
+-- Name: game_ai_info; Type: TABLE; Schema: public; Owner: flaskapp
+--
+
+CREATE TABLE public.game_ai_info (
+    game_id bigint NOT NULL,
+    description text,
+    metacritic_score smallint,
+    avg_playtime_hours numeric,
+    fetched_at timestamp without time zone
+);
+
+
+ALTER TABLE public.game_ai_info OWNER TO flaskapp;
+
+
+--
 -- Name: game_category_tags; Type: TABLE; Schema: public; Owner: flaskapp
 --
 
@@ -206,6 +222,14 @@ ALTER TABLE ONLY public.game_category_tags
 
 
 --
+-- Name: game_ai_info game_ai_info_pkey; Type: CONSTRAINT; Schema: public; Owner: flaskapp
+--
+
+ALTER TABLE ONLY public.game_ai_info
+    ADD CONSTRAINT game_ai_info_pkey PRIMARY KEY (game_id);
+
+
+--
 -- Name: games history_pkey; Type: CONSTRAINT; Schema: public; Owner: flaskapp
 --
 
@@ -290,6 +314,14 @@ ALTER TABLE ONLY public.games
 
 ALTER TABLE ONLY public.games
     ADD CONSTRAINT history_platform_id_fkey FOREIGN KEY (platform_id) REFERENCES public.platforms(platform_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: game_ai_info game_ai_info_game_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: flaskapp
+--
+
+ALTER TABLE ONLY public.game_ai_info
+    ADD CONSTRAINT game_ai_info_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(game_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

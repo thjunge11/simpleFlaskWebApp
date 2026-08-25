@@ -89,9 +89,6 @@ class Game(db.Model):
     comments = db.Column(db.Text)
     personal_score = db.Column(db.SmallInteger)
     personal_review = db.Column(db.Text)
-    description = db.Column(db.Text)
-    metascore = db.Column(db.SmallInteger)
-    average_playtime = db.Column(db.Numeric)
     
     # Relationships
     perspective = db.relationship('Perspective', backref='games')

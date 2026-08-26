@@ -27,13 +27,21 @@ cd <repository_directory>
 ```bash
 sudo docker compose up -d
 ```
-## Set up HTTPS with a trusted Let's Encrypt certificate
-- Make sure the domain's DNS A record points at the EC2 instance's public IP, and that port 80/443 are open.
-- Run the bootstrap script once (obtains the first certificate; nginx auto-reloads every 12h to pick up renewals, and the `certbot` container renews automatically):
+## Set up HTTPS (IP-only access, self-signed certificate)
+- There's no domain name involved, so a publicly trusted CA (Let's Encrypt included) cannot issue a certificate for this server — a self-signed certificate is used instead, bound to the instance's public/Elastic IP.
+- Set the `SSL_IP` environment variable (e.g. in your `.env` file) to the EC2 instance's public/Elastic IP, then start the nginx stack:
 ```bash
-sudo ./nginx/init-letsencrypt.sh
+echo "SSL_IP=<EC2_PUBLIC_IP>" >> .env
+sudo docker compose -f docker-compose.nginx.yaml up -d --build
 ```
-- Note: a self-signed certificate (the previous default) causes Chrome/Edge to silently refuse to offer "Save password?" on the login page, even after clicking through the security warning. A trusted certificate is required for the browser's password manager to work.
+  The cert/key are generated on first start and persisted in the `nginx_ssl_certs` volume, so they survive restarts. If the public IP ever changes, remove the volume (`docker volume rm nginx_nginx_ssl_certs`) to force regeneration.
+- Note: because the certificate is self-signed, browsers show a security warning and — more importantly — Chrome/Edge will silently refuse to offer "Save password?" on the login page even after clicking through the warning. To fix that on any client machine that needs it:
+  1. Copy the certificate off the server: `sudo docker cp nginx_proxy:/etc/nginx/ssl/cert.pem .`
+  2. Import `cert.pem` into that device's/browser's trusted root certificate store:
+     - **Windows**: double-click `cert.pem` → *Install Certificate* → *Local Machine* → *Place all certificates in the following store* → *Trusted Root Certification Authorities*.
+     - **macOS**: open `cert.pem` in *Keychain Access*, add it to *System*, then double-click it → *Trust* → *Always Trust*.
+     - **Chrome/Edge (Linux or to scope it to the browser only)**: Settings → Privacy and security → Security → Manage certificates → *Authorities* tab → *Import*.
+  3. Reload the login page — the padlock should now show as trusted and the browser will offer to save the password.
 ## Initialize the database and restore backup from any existing instance:
 - use pg_dump to backup database on the instance by running the following command:
 ```bash

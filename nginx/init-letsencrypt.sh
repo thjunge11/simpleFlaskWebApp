@@ -18,8 +18,8 @@ docker compose -f "$COMPOSE_FILE" run --rm --entrypoint "\
     -out /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
     -subj '/CN=localhost'" certbot
 
-echo "### Starting nginx ###"
-docker compose -f "$COMPOSE_FILE" up -d nginx
+echo "### Building and starting nginx with the current nginx.conf ###"
+docker compose -f "$COMPOSE_FILE" up -d --build nginx
 
 echo "### Deleting temporary certificate for $DOMAIN ###"
 docker compose -f "$COMPOSE_FILE" run --rm --entrypoint "\

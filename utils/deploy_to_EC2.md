@@ -27,6 +27,13 @@ cd <repository_directory>
 ```bash
 sudo docker compose up -d
 ```
+## Set up HTTPS with a trusted Let's Encrypt certificate
+- Make sure the domain's DNS A record points at the EC2 instance's public IP, and that port 80/443 are open.
+- Run the bootstrap script once (obtains the first certificate; nginx auto-reloads every 12h to pick up renewals, and the `certbot` container renews automatically):
+```bash
+sudo ./nginx/init-letsencrypt.sh
+```
+- Note: a self-signed certificate (the previous default) causes Chrome/Edge to silently refuse to offer "Save password?" on the login page, even after clicking through the security warning. A trusted certificate is required for the browser's password manager to work.
 ## Initialize the database and restore backup from any existing instance:
 - use pg_dump to backup database on the instance by running the following command:
 ```bash
